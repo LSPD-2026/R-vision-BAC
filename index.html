@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiches Bac Philo</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0e0e0f;
+  --card: #1c1c1f;
+  --border: #2a2a2f;
+  --accent: #c9a96e;
+  --accent-dim: #8a6e40;
+  --text: #e8e4dc;
+  --muted: #7a7670;
+  --tag-bg: #252420;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100dvh; }
+
+/* ── HEADER ── */
+header {
+  position: sticky; top: 0; z-index: 200;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 0.9rem 1rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+}
+.header-left { display: flex; flex-direction: column; }
+.header-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 400; line-height: 1.2; }
+.header-title span { color: var(--accent); font-style: italic; }
+.header-sub { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 0.15rem; }
+.header-right { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+.counter { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+.menu-btn {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  width: 34px; height: 34px; border-radius: 4px; cursor: pointer;
+  font-size: 1rem; display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.2s, color 0.2s;
+}
+.menu-btn:hover { border-color: var(--accent-dim); color: var(--text); }
+.menu-btn.active { border-color: var(--accent); color: var(--accent); }
+
+/* ── DRAWER ── */
+.drawer-overlay {
+  display: none; position: fixed; inset: 0; z-index: 300;
+  background: rgba(0,0,0,0.6);
+}
+.drawer-overlay.open { display: block; }
+.drawer {
+  position: fixed; top: 0; left: -100%; bottom: 0; z-index: 400;
+  width: min(280px, 80vw);
+  background: #131315;
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  transition: left 0.28s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+}
+.drawer.open { left: 0; }
+.drawer-header {
+  padding: 1.1rem 1.25rem 0.9rem;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.drawer-title { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.drawer-close { background: none; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; padding: 2px 6px; }
+.drawer-body { overflow-y: auto; flex: 1; padding: 0.75rem 0; }
+.drawer-body::-webkit-scrollbar { width: 3px; }
+.drawer-body::-webkit-scrollbar-thumb { background: var(--border); }
+.drawer-group-label { font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); padding: 0.6rem 1.25rem 0.4rem; }
+.nav-item {
+  display: block; width: 100%; text-align: left; background: none; border: none;
+  padding: 0.55rem 1.25rem; font-family: 'DM Sans', sans-serif; font-size: 0.82rem;
+  color: var(--muted); cursor: pointer; border-left: 2px solid transparent;
+  transition: all 0.15s; line-height: 1.35;
+}
+.nav-item:hover { color: var(--text); background: #1a1a1c; }
+.nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(201,169,110,0.07); font-weight: 500; }
+.nav-item.special { color: #9999cc; }
+.nav-item.special.active { color: #bbbbff; border-left-color: #9999cc; background: rgba(153,153,204,0.07); }
+
+/* ── TABS (top scrolling pill nav) ── */
+.tabs-wrap {
+  position: sticky; top: 57px; z-index: 100;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto; white-space: nowrap;
+  scrollbar-width: none;
+  padding: 0.5rem 1rem;
+  display: flex; gap: 0.4rem;
+}
+.tabs-wrap::-webkit-scrollbar { display: none; }
+.tab-btn {
+  display: inline-block; padding: 0.3rem 0.85rem;
+  font-family: 'DM Sans', sans-serif; font-size: 0.73rem;
+  background: var(--card); border: 1px solid var(--border);
+  color: var(--muted); border-radius: 20px; cursor: pointer;
+  white-space: nowrap; transition: all 0.15s;
+}
+.tab-btn:hover { border-color: var(--accent-dim); color: var(--text); }
+.tab-btn.active { background: rgba(201,169,110,0.12); border-color: var(--accent); color: var(--accent); font-weight: 500; }
+.tab-btn.special { border-color: #444466; color: #9999cc; }
+.tab-btn.special.active { background: rgba(153,153,204,0.1); border-color: #9999cc; color: #bbbbff; }
+
+/* ── MAIN ── */
+main { flex: 1; padding: 1.25rem 1rem 2rem; max-width: 680px; margin: 0 auto; width: 100%; }
+
+.fiche { display: none; }
+.fiche.active { display: block; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Fiche head */
+.fiche-head { margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
+.fiche-number { font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-dim); margin-bottom: 0.4rem; }
+.fiche-title { font-family: 'Playfair Display', serif; font-size: clamp(1.5rem, 6vw, 2.2rem); font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; }
+.fiche-subtitle { font-size: 0.8rem; color: var(--muted); margin-top: 0.4rem; font-style: italic; line-height: 1.5; }
+
+.section-label { font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-dim); margin-bottom: 0.6rem; margin-top: 1.35rem; }
+
+/* Repères tags */
+.reperes { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.repere-tag { font-size: 0.7rem; padding: 0.25rem 0.65rem; background: var(--tag-bg); color: var(--accent); border: 1px solid var(--accent-dim); border-radius: 2px; }
+
+/* Oeuvre cards */
+.oeuvres { display: flex; flex-direction: column; gap: 1rem; margin-top: 0.5rem; }
+.oeuvre-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 1rem 1.1rem; }
+.oeuvre-meta { margin-bottom: 0.75rem; }
+.oeuvre-title { font-family: 'Playfair Display', serif; font-size: 0.95rem; font-style: italic; display: block; margin-bottom: 0.2rem; }
+.oeuvre-author { font-size: 0.7rem; color: var(--muted); }
+.small-label { font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-dim); margin-bottom: 0.3rem; }
+.these { font-size: 0.84rem; line-height: 1.7; color: var(--text); margin-bottom: 0.85rem; padding-left: 0.75rem; border-left: 2px solid var(--accent); }
+.args { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
+.args li { font-size: 0.79rem; color: #aaa8a4; padding-left: 1.1rem; position: relative; line-height: 1.6; }
+.args li::before { content: "—"; position: absolute; left: 0; color: var(--accent-dim); }
+
+/* Bottom nav */
+.bottom-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--border); gap: 0.5rem; }
+.nav-btn { font-family: 'DM Sans', sans-serif; font-size: 0.75rem; background: none; border: 1px solid var(--border); color: var(--muted); padding: 0.45rem 0.85rem; cursor: pointer; border-radius: 4px; transition: all 0.15s; flex-shrink: 0; }
+.nav-btn:hover { border-color: var(--accent-dim); color: var(--text); }
+.nav-btn:disabled { opacity: 0.2; cursor: default; }
+.progress-info { font-size: 0.72rem; color: var(--muted); text-align: center; }
+
+/* ── NOTIONS PAGE ── */
+.notions-grid { display: grid; grid-template-columns: 1fr; gap: 0.85rem; margin-top: 0.5rem; }
+@media (min-width: 500px) { .notions-grid { grid-template-columns: 1fr 1fr; } }
+.notion-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 1rem 1.1rem; }
+.notion-name { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--accent); margin-bottom: 0.4rem; }
+.notion-def { font-size: 0.78rem; color: #aaa8a4; line-height: 1.65; }
+.notion-opp { font-size: 0.7rem; color: var(--muted); margin-top: 0.35rem; font-style: italic; }
+
+/* ── REPÈRES PAGE ── */
+.reperes-list { display: flex; flex-direction: column; gap: 0.9rem; margin-top: 0.5rem; }
+.repere-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 1rem 1.1rem; }
+.repere-pair { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.65rem; flex-wrap: wrap; }
+.repere-term { font-family: 'Playfair Display', serif; font-size: 0.95rem; color: #bbbbff; }
+.repere-vs { font-size: 0.65rem; color: var(--muted); padding: 0 0.1rem; }
+.repere-def-a { font-size: 0.79rem; color: var(--text); line-height: 1.65; padding-left: 0.8rem; border-left: 2px solid #666699; margin-bottom: 0.5rem; }
+.repere-def-b { font-size: 0.79rem; color: #aaa8a4; line-height: 1.65; padding-left: 0.8rem; border-left: 2px solid #444466; }
+.repere-note { font-size: 0.72rem; color: var(--muted); margin-top: 0.5rem; font-style: italic; line-height: 1.5; }
+
+@media (min-width: 680px) {
+  main { padding: 2rem 2rem 3rem; }
+  .header-title { font-size: 1.35rem; }
+  .tabs-wrap { top: 62px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-left">
+    <div class="header-title">Fiches — <span>Philosophie</span></div>
+    <div class="header-sub">Terminale · Bac général</div>
+  </div>
+  <div class="header-right">
+    <span class="counter" id="counter">1 / 12</span>
+    <button class="menu-btn" id="menu-btn" aria-label="Menu notions">☰</button>
+  </div>
+</header>
+
+<!-- DRAWER OVERLAY -->
+<div class="drawer-overlay" id="overlay"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <span class="drawer-title">Navigation</span>
+    <button class="drawer-close" id="drawer-close">✕</button>
+  </div>
+  <div class="drawer-body">
+    <div class="drawer-group-label">Notions</div>
+    <div id="drawer-notions"></div>
+    <div class="drawer-group-label" style="margin-top:0.5rem">Références</div>
+    <div id="drawer-special"></div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-wrap" id="tabs-wrap"></div>
+
+<!-- MAIN -->
+<main id="main-content"></main>
+
+<script>
+const fiches = [
+  {
+    id:"liberte-bonheur", title:"Liberté & Bonheur", short:"Liberté",
+    subtitle:"Deux notions liées par la question du désir et de la vie bonne",
+    reperes:["En acte / En puissance","Déterminisme / Liberté","Idéal / Réel","Médiat / Immédiat"],
+    oeuvres:[
+      { title:"Gorgias", author:"Platon (IVe s. av. J.-C.)",
+        these:"Calliclès soutient que la vraie vie bonne consiste à laisser croître ses désirs sans limite et à avoir la puissance de les satisfaire. Socrate lui oppose que cette conception mène non à la liberté mais à l'esclavage des passions, et que le bonheur exige un ordre intérieur, une tempérance de l'âme.",
+        args:["Calliclès : la morale n'est qu'une invention des faibles pour enchaîner les forts ; réprimer ses désirs n'est pas une vertu mais une incapacité. La vraie nature commande de les satisfaire pleinement.","Socrate : l'homme aux tonneaux percés illustre la misère du désir insatiable — remplir sans cesse sans jamais être rassasié n'est pas le bonheur mais la peine perpétuelle.","La liberté déréglée n'est qu'une illusion : celui qui ne résiste pas à ses passions en est l'esclave, non le maître. La vraie liberté suppose la maîtrise de soi.","L'homme tempérant a rempli ses tonneaux : il est en paix, libre de penser à autre chose. Le bonheur est dans la suffisance, non dans l'excès."] },
+      { title:"Lettre à Ménesée", author:"Épicure",
+        these:"Le bonheur (ataraxie) et la liberté s'obtiennent non pas en satisfaisant tous les désirs, mais en les hiérarchisant et en limitant ses besoins aux désirs naturels et nécessaires.",
+        args:["Trois catégories de désirs : naturels et nécessaires (à satisfaire), naturels mais non nécessaires (à modérer), vains (à rejeter, car insatiables et source d'angoisse).","La peur de la mort est la principale source d'esclavage : 'La mort n'est rien pour nous, car quand nous sommes, la mort n'est pas là.'","La liberté épicurienne est celle du sage qui ne dépend que de choses accessibles : l'amitié, la philosophie, la nourriture simple.","Le plaisir katastématique (état stable de satisfaction) est supérieur au plaisir cinétique (agitation du désir en cours de satisfaction)."] },
+      { title:"Mythe de Prométhée & Discours de la Méthode VI", author:"Platon / Descartes",
+        these:"La technique et la raison sont les voies de la liberté humaine : elles permettent de ne plus être soumis à la nécessité naturelle et d'accéder à un bonheur construit, non subi.",
+        args:["Prométhée (Protagoras) : sans la technique du feu, l'homme est nu, sans défenses, condamné à la survie précaire. La technique le libère de la pure nécessité.","Descartes : en se rendant 'comme maître et possesseur de la nature', l'homme assure sa santé, prolonge sa vie — conditions matérielles du bonheur.","Descartes distingue libre arbitre et liberté de l'entendement : la vraie liberté est d'agir selon la raison, non selon les passions.","La maîtrise de soi est aussi importante que la maîtrise de la nature : 'Changer ses désirs plutôt que l'ordre du monde' (morale par provision)."] },
+      { title:"Une éthique pour la nature", author:"Hans Jonas (1994)",
+        these:"La liberté technologique moderne menace les conditions de la vie humaine future. Un nouveau principe de responsabilité doit limiter cette liberté pour préserver le bonheur des générations à venir.",
+        args:["Le principe responsabilité : 'Agis de façon que les effets de ton action soient compatibles avec la permanence d'une vie humaine authentique sur terre.'","La puissance technique moderne est sans précédent : pour la première fois, l'homme peut détruire irréversiblement les conditions de la vie sur Terre.","La vraie liberté n'est pas l'exercice illimité de nos capacités, mais la capacité à nous autolimiter au nom du futur et d'autrui.","Le bonheur individuel ne peut se construire sur la destruction du bien commun à venir : liberté et responsabilité sont inséparables."] }
+    ]
+  },
+  {
+    id:"conscience-inconscient", title:"Conscience & Inconscient", short:"Conscience",
+    subtitle:"Les deux faces du sujet",
+    reperes:["Intuitif / Discursif","Réflexif / Spontané","Explicite / Implicite","Objectif / Subjectif"],
+    oeuvres:[
+      { title:"Méditations Métaphysiques", author:"René Descartes",
+        these:"La conscience est le fondement absolu de toute certitude. En doutant de tout, Descartes découvre que la pensée elle-même est indubitable : 'Je pense, donc je suis.' L'âme, chose pensante, est transparente à elle-même.",
+        args:["Le doute hyperbolique : Descartes doute de tout — les sens, le monde extérieur, les mathématiques, jusqu'à l'hypothèse du malin génie.","La résistance du cogito : même si un malin génie me trompe sur tout, il faut que je pense pour être trompé. La conscience de penser est indubitable.","L'âme est res cogitans (chose pensante), distincte du corps (res extensa). Elle est ce que je connais le mieux et le plus directement.","Pour Descartes, il n'y a pas d'inconscient psychique : toute pensée est consciente. L'inconscient n'est pas de l'ordre de la pensée mais du corps (automatismes)."] },
+      { title:"Introduction à la psychanalyse / L'Interprétation des rêves", author:"Sigmund Freud",
+        these:"L'inconscient est une instance psychique réelle, distincte de la conscience, dotée de ses propres lois et désirs. Le Moi conscient n'est pas maître dans sa propre maison.",
+        args:["La première topique : Inconscient / Préconscient / Conscient. L'inconscient contient des représentations refoulées car trop conflictuelles pour la conscience.","Le refoulement : mécanisme par lequel des désirs ou souvenirs traumatiques sont chassés hors de la conscience et maintenus à distance.","Le retour du refoulé : ce qui est refoulé revient de façon déguisée dans les rêves, les lapsus, les actes manqués, les symptômes névrotiques.","La psychanalyse vise à rendre conscient ce qui était inconscient pour lever le refoulement et guérir la névrose."] },
+      { title:"Psychanalyse des contes de fées", author:"Bruno Bettelheim (1976)",
+        these:"Les contes de fées s'adressent directement à l'inconscient de l'enfant. En lui proposant des images symboliques de ses conflits intérieurs, ils l'aident à les élaborer sans avoir à les conscientiser.",
+        args:["L'inconscient de l'enfant est peuplé de pulsions et d'angoisses (mort du parent, rivalité fraternelle) que la conscience ne peut affronter directement.","Les personnages des contes (sorcières, princes, belles-mères) sont des projections des figures internes de l'enfant : mère bonne/mauvaise, père protecteur/castrateur.","Le conte parle le langage de l'inconscient : images, symboles, répétitions, transformations — non des explications rationnelles.","Cette communication inconscient-à-inconscient rassure l'enfant sur l'issue possible de ses conflits intérieurs, sans qu'il ait besoin de les comprendre consciemment."] },
+      { title:"Expérience de la chambre de Mary", author:"Frank Jackson (philosophie de l'esprit)",
+        these:"Il existe une dimension de l'expérience consciente, le qualia, irréductible à toute description physique. La conscience subjective ne peut se réduire à des processus cérébraux ou inconscients.",
+        args:["L'expérience de pensée : Mary connaît tous les faits physiques sur la vision des couleurs mais a toujours vécu en noir et blanc.","Quand elle voit le rouge pour la première fois, elle apprend quelque chose de nouveau : ce que c'est que de voir le rouge — un qualia non réductible à la physique.","Si la connaissance physique était complète, Mary ne devrait rien apprendre. Donc il existe des faits non physiques sur la conscience.","La conscience subjective (1re personne) est irréductible à la description objective (3e personne) : l'inconscient neurologique ne peut pas tout expliquer du vécu conscient."] }
+    ]
+  },
+  {
+    id:"raison-verite", title:"Raison & Vérité", short:"Raison",
+    subtitle:"Épistémologie : comment connaître et démontrer",
+    reperes:["Démontrer / Montrer","Absolu / Relatif","Objectif / Subjectif","Croire / Savoir"],
+    oeuvres:[
+      { title:"Discours de la Méthode & Méditations", author:"René Descartes",
+        these:"La raison, faculté universellement partagée, peut, si elle est bien conduite, atteindre des vérités certaines, claires et distinctes. La méthode est la condition de la science.",
+        args:["Les quatre règles : évidence, analyse (décomposer les problèmes), synthèse (ordonner du simple au complexe), dénombrement complet.","'Le bon sens est la chose du monde la mieux partagée' : la raison est universelle, c'est son usage qui diffère.","La vérité se reconnaît à la clarté et la distinction : une idée vraie ne peut être mise en doute sans tomber en contradiction.","Dieu garant de la vérité : les idées claires et distinctes que notre raison produit correspondent à la réalité car Dieu n'est pas trompeur."] },
+      { title:"Discours Décisif & Réfutation de la réfutation", author:"Ibn Rushd — Averroès (XIIe s.)",
+        these:"La raison philosophique et la foi ne s'opposent pas : elles convergent vers la même vérité par des voies différentes. La philosophie est le mode d'accès aux vérités le plus élevé pour ceux qui en sont capables.",
+        args:["La loi islamique elle-même commande aux savants d'étudier les êtres par la raison : philosopher est un devoir religieux.","Triple voie : démonstration apodictique (philosophes), dialectique (théologiens), rhétorique (peuple) — chaque classe accède à la vérité selon ses moyens.","Contre Al-Ghazali : les apparentes contradictions entre philosophie aristotélicienne et islam viennent d'une lecture trop littérale des textes.","La vérité est une et indivise : la philosophie et la révélation y conduisent toutes deux. Philosopher est une prolongation de la foi, non une trahison."] },
+      { title:"Pensées — Le Pari", author:"Blaise Pascal",
+        these:"La raison démonstrative a des limites radicales : elle ne peut ni prouver ni réfuter l'existence de Dieu. Face à l'infini, la raison elle-même conseille de parier pour Dieu.",
+        args:["Les deux infinis écrasent la raison humaine : elle ne peut embrasser ni l'infiniment grand ni l'infiniment petit.","'Le cœur a ses raisons que la raison ne connaît point' : il existe une connaissance intuitive irréductible à la démonstration.","Le pari : si Dieu existe et que je crois, je gagne tout ; si je crois et qu'il n'existe pas, je perds peu. La raison probabiliste conseille de croire.","La connaissance des 'vérités premières' (espace, temps, mouvement) vient du cœur, non de la démonstration — la raison s'appuie sur ces fondements qu'elle ne peut démontrer."] },
+      { title:"Problématique de la vérité", author:"Roger Poirier",
+        these:"La vérité n'est pas une donnée immédiate et univoque : elle est une construction qui suppose des critères et des procédures différents selon les domaines.",
+        args:["Vérité-correspondance : une proposition est vraie si elle correspond à la réalité (adéquation de l'intellect à la chose — Aristote).","Vérité-cohérence : une proposition est vraie si elle est non contradictoire et s'intègre dans un système cohérent.","Vérité pragmatique (James, Dewey) : est vrai ce qui est utile, ce qui 'fonctionne' dans la pratique et résout les problèmes.","La question 'qu'est-ce que la vérité ?' est une méta-question : science, morale, art et religion mobilisent des concepts de vérité distincts."] }
+    ]
+  },
+  {
+    id:"nature-technique", title:"Nature & Technique", short:"Nature",
+    subtitle:"Le rapport de l'humain au monde naturel et artificiel",
+    reperes:["Nature / Culture","Artificiel / Naturel","Moyen / Fin","En acte / En puissance"],
+    oeuvres:[
+      { title:"Protagoras — Mythe de Prométhée", author:"Platon",
+        these:"La technique est constitutive de l'humanité : sans elle, l'homme, animal nu et sans instincts, ne pourrait survivre. Elle compense la faiblesse naturelle de l'espèce.",
+        args:["Le mythe : Épiméthée distribue aux animaux leurs qualités naturelles. L'homme oublié reçoit le feu de Prométhée — la technique — pour survivre.","La technique n'est pas une option mais la condition de l'homme : il est, par nature, un être de culture et d'artifice, sans nature propre au sens biologique.","Mais la technique seule ne suffit pas : Prométhée vole aussi la sagesse politique — la technique doit s'accompagner d'une éthique sociale.","La nature humaine est paradoxale : l'homme est naturellement un être artificiel, qui crée son propre milieu plutôt que de s'adapter à un milieu donné."] },
+      { title:"Discours de la Méthode VI", author:"René Descartes",
+        these:"La technique est l'instrument par lequel la raison se rend maître de la nature. La science moderne vise la domination pratique du monde au service du bien-être humain.",
+        args:["'Se rendre comme maître et possesseur de la nature' : la technique permet de connaître les forces naturelles pour les utiliser (médecine, agriculture, mécanique).","Cette maîtrise est au service du bonheur : allonger la vie, réduire la souffrance, faciliter le travail.","La nature cesse d'être mystérieuse pour devenir un mécanisme que l'on peut analyser, reproduire et exploiter.","Limite : Descartes ne pense pas les effets destructeurs de cette maîtrise — il croit à l'harmonie entre progrès technique et bien humain."] },
+      { title:"La technique (1994)", author:"Jean-Pierre Séris",
+        these:"La technique moderne est une réalité autonome qui dépasse la simple accumulation d'outils. Elle transforme notre rapport au monde et notre façon d'être humains.",
+        args:["La technique contemporaine génère ses propres fins, crée ses propres besoins et impose sa rationalité à tous les domaines de la vie.","Le 'système technique' (Ellul) : la technique moderne tend à former un système auto-entretenu selon une logique d'efficacité maximale.","La rationalisation tayloriste fragmente les tâches, prive les ouvriers du sens de leur activité et de la fierté de l'œuvre accomplie.","La question n'est plus 'à quoi sert la technique' mais 'qui commande la technique' — et la réponse est souvent : la technique elle-même."] },
+      { title:"Une éthique pour la nature", author:"Hans Jonas (1994)",
+        these:"La puissance technique moderne impose une nouvelle éthique de la responsabilité : nous sommes capables de détruire la nature et les conditions de la vie. Cette responsabilité doit guider la technique.",
+        args:["Nouveauté radicale : pour la première fois, les actions humaines peuvent avoir des effets globaux et irréversibles sur la biosphère entière.","Principe responsabilité : 'Agis de façon que les effets de ton action soient compatibles avec la permanence d'une vie humaine authentique.'","La nature a une valeur en elle-même, indépendamment de son utilité pour l'homme. L'éthique ne peut plus se limiter aux relations entre humains.","Heuristique de la peur : face à l'incertitude, privilégier la prévision du pire — le principe de précaution comme sagesse technique."] },
+      { title:"Il faut repenser les rapports humains/non-humains", author:"Philippe Descola (CNRS, 2020)",
+        these:"La coupure radicale entre Nature et Culture est une construction propre à l'Occident moderne. D'autres cultures organisent autrement ce rapport, ce qui offre des alternatives à notre crise écologique.",
+        args:["Le naturalisme occidental : seule l'intériorité (âme, raison) différencie les humains ; la nature est un ensemble de corps soumis aux mêmes lois mécaniques.","L'animisme (cultures amérindiennes, sibériennes) : humains et non-humains partagent une intériorité commune mais diffèrent par leurs physicalités. Les animaux sont des 'personnes'.","Le totémisme (peuples australiens) : la distinction nature/culture n'existe pas — humains et non-humains partagent intériorités et physicalités semblables.","La domination techniciste de la nature n'est pas un universel mais une particularité culturelle. D'autres rapports au monde sont possibles et nécessaires."] }
+    ]
+  },
+  {
+    id:"art", title:"Art", short:"Art",
+    subtitle:"L'expérience esthétique, la création, le beau",
+    reperes:["Idéal / Réel","Objectif / Subjectif","Imitation / Création","Abstrait / Concret"],
+    oeuvres:[
+      { title:"La Pensée et le mouvant", author:"Henri Bergson (1934)",
+        these:"L'art est une vision pure qui brise les schèmes utilitaires de la perception ordinaire. Là où nous voyons des étiquettes, l'artiste voit les choses elles-mêmes dans leur singularité vivante.",
+        args:["La perception ordinaire est utilitaire : nous ne voyons pas les choses mais des signes de choses suffisants pour guider notre action.","L'artiste a la faculté de percevoir directement, sans le filtre du besoin. Il est 'attentif à la vie' d'une façon que l'intelligence pratique ne permet pas.","L'œuvre d'art nous communique cette vision : après avoir regardé un Corot, nous voyons les arbres différemment. L'art éduque notre perception.","L'art rejoint la métaphysique bergsonienne : tous deux visent l'intuition du réel dans sa durée, contre l'intelligence analytique qui découpe et fige."] },
+      { title:"Du côté de chez Swann", author:"Marcel Proust",
+        these:"L'art seul peut retrouver le temps perdu en ressuscitant l'essence des choses telles qu'elles ont été vécues subjectivement. L'œuvre d'art donne accès à une vérité à la fois universelle et singulière.",
+        args:["La petite phrase de Vinteuil : la musique éveille en Swann une émotion qui transcende toute explication rationnelle et atteint quelque chose d'indicible.","La mémoire involontaire (la madeleine) : contrairement à la mémoire volontaire (froide), elle ressuscite le passé dans toute sa réalité sensible et affective.","L'art comme madeleine généralisée : l'œuvre fait pour tous ce que la madeleine fait pour Marcel — elle ressuscite un monde perdu dans sa vérité vivante.","Le projet proustien : faire de la vie elle-même une œuvre d'art en la comprenant rétrospectivement. La vie vraie, c'est la littérature."] },
+      { title:"Critique de la faculté de juger", author:"Emmanuel Kant",
+        these:"Le jugement esthétique est irréductible au jugement cognitif et moral. Il est subjectif (fondé sur le sentiment de plaisir) mais prétend à une universalité sans concept.",
+        args:["Le beau plaît universellement sans concept : contrairement à l'agréable (subjectif) et au bon (moral), le beau prétend à l'accord de tous sans pouvoir le démontrer.","Le jugement de goût est désintéressé : on ne juge pas le beau en fonction de son utilité ou de son agréable mais en pure contemplation.","L'art du génie : le génie crée de lui-même des règles nouvelles que la nature produit à travers lui. Il n'imite pas — il crée.","Le sublime : expérience de ce qui dépasse nos facultés sensibles (la tempête, les montagnes) et révèle la grandeur de notre raison morale face à la nature."] }
+    ]
+  },
+  {
+    id:"travail", title:"Travail", short:"Travail",
+    subtitle:"Le travail comme transformation de soi et du monde",
+    reperes:["En acte / En puissance","Moyen / Fin","Aliénation / Émancipation","En fait / En droit"],
+    oeuvres:[
+      { title:"Phénoménologie de l'Esprit — Dialectique Maître/Esclave", author:"Hegel",
+        these:"C'est par le travail, et non par la domination oisive, que la conscience accède à une liberté véritable. L'esclave qui travaille se libère ; le maître qui ne travaille pas reste dépendant.",
+        args:["Le maître consomme directement (jouissance immédiate), l'esclave transforme la matière par le travail (médiation) — leur rapport à la chose les définit.","En travaillant, l'esclave objective son intériorité dans la matière : il reconnaît sa propre puissance dans l'objet créé. Il 'se trouve soi-même' dans l'œuvre.","Le maître dépend de l'esclave pour tout. Sa liberté est vide, abstraite. Il ne peut se reconnaître dans aucune œuvre propre.","Retournement dialectique : l'esclave développe une conscience autonome par le travail et la peur de la mort, tandis que le maître reste figé."] },
+      { title:"Manuscrits économico-philosophiques de 1844", author:"Karl Marx",
+        these:"Le travail devrait être l'expression libre de l'activité humaine. Mais dans le capitalisme, il est aliéné : il se retourne contre l'ouvrier et le dépossède de son être.",
+        args:["Quatre dimensions de l'aliénation : l'ouvrier est aliéné de son produit, de l'acte productif, de son être générique (l'activité créatrice propre à l'homme), et des autres hommes.","L'homme se définit par le travail : contrairement à l'animal, il 'construit d'abord la maison dans sa tête'. Le travail est activité consciente et créatrice — en droit.","En fait sous le capitalisme, le travail n'est qu'un moyen de survie : l'ouvrier ne se réalise pas dans son travail mais hors de lui (repos, nourriture).","L'émancipation suppose une révolution qui rende à l'homme la propriété collective des moyens de production et le contrôle de son activité."] },
+      { title:"Les Temps modernes (film)", author:"Charlie Chaplin (1936)",
+        these:"Le travail industriel taylorisé, en réduisant l'ouvrier à un geste répétitif et mécanique, le prive de toute dimension humaine : sens, initiative, dignité.",
+        args:["Charlot à la chaîne : son seul geste est de visser des boulons. Réduit à ce mouvement, son corps y obéit compulsivement même hors de la chaîne — l'aliénation est incorporée.","La machine avale l'homme : Charlot englouti par les engrenages illustre que l'ouvrier n'est qu'un rouage interchangeable et remplaçable.","Le contremaître surveille même aux toilettes via écran : le contrôle tayloriste ne laisse aucun espace d'autonomie ni d'intimité.","Chaplin montre sans texte ce que Marx dit en concepts : c'est le système entier, et non la malveillance individuelle, qui produit cette déshumanisation."] },
+      { title:"Ainsi parlait Zarathoustra", author:"Friedrich Nietzsche",
+        these:"Le travail aliéné est une fuite devant soi-même. La vraie 'œuvre' de l'homme n'est pas la production économique mais la création de soi et de nouvelles valeurs.",
+        args:["Critique du 'travailleur' moderne : valoriser le travail comme vertu est un mensonge des esclaves pour se consoler de leur servitude et abrutir les forts.","Le travail comme divertissement (sens pascalien) : en s'abrutissant de tâches, on évite de se confronter au vertige de sa propre existence et de la question du sens.","L'idéal nietzschéen est l'artiste-créateur, dont l'activité est pure expression de puissance et d'inventivité, non soumission à une contrainte externe.","La figure du surhomme est celle qui 'se donne une valeur' par sa propre création, non celle qui reçoit une valeur de l'utilité sociale de son travail."] }
+    ]
+  },
+  {
+    id:"justice-etat", title:"Justice, Devoir & État", short:"Justice",
+    subtitle:"Philosophie politique et morale",
+    reperes:["Légal / Légitime","En droit / En fait","Contrat / Nature","Persuader / Convaincre"],
+    oeuvres:[
+      { title:"Léviathan", author:"Thomas Hobbes",
+        these:"Sans État, il n'y a ni justice ni injustice — seulement la guerre de tous contre tous. La justice est une création du souverain, qui seul peut garantir la paix.",
+        args:["État de nature : 'L'homme est un loup pour l'homme.' En l'absence de pouvoir coercitif, chaque individu peut faire tout ce qui lui semble nécessaire à sa survie. Pas de propriété, pas de justice.","Le contrat social hobbesien : par peur de la mort violente, les individus cèdent tous leurs droits à un souverain absolu (le Léviathan).","La justice n'est pas naturelle mais conventionnelle : c'est le souverain qui définit le juste et l'injuste en édictant les lois. Avant le contrat, rien n'est juste ni injuste.","Limite : le souverain est absolu et ne peut être révoqué — sauf s'il ne garantit plus la sécurité, auquel cas le droit à la résistance revient."] },
+      { title:"Du Contrat social", author:"Jean-Jacques Rousseau",
+        these:"La légitimité de l'État ne repose pas sur la force mais sur la volonté générale. Un État juste est celui dans lequel chaque citoyen obéit à la loi qu'il s'est lui-même prescrite.",
+        args:["Distinction volonté générale / volonté de tous : la volonté de tous est la somme des intérêts particuliers ; la volonté générale est ce que chacun voudrait en pensant au bien commun.","En entrant dans le contrat social, l'individu abandonne sa liberté naturelle mais gagne la liberté civile : obéir à la loi qu'il s'est donnée.","L'inégalité sociale est la source principale de l'injustice : dans l'état de nature, les hommes sont égaux ; la propriété a créé des inégalités artificielles.","Critique de Hobbes : le souverain absolu n'est pas légitime car il ne représente pas la volonté générale — c'est un despote, non un représentant du peuple."] },
+      { title:"Fondements de la métaphysique des mœurs", author:"Emmanuel Kant",
+        these:"Le devoir moral est universel, inconditionnel et fondé sur la seule raison pratique. Ce qui donne à une action sa valeur morale, c'est l'intention qui la guide, non son résultat.",
+        args:["L'impératif catégorique (1re formulation) : 'Agis uniquement d'après la maxime qui fait que tu peux vouloir en même temps qu'elle devienne une loi universelle.' Test d'universalisabilité.","Agir par devoir vs conformément au devoir : aider son prochain par devoir moral a une valeur éthique ; l'aider par intérêt n'en a pas.","2e formulation : 'Traite l'humanité toujours aussi comme une fin, et jamais seulement comme un moyen.'","La justice kantienne : une action est juste si elle est compatible avec la liberté de tous selon une loi universelle."] }
+    ]
+  },
+  {
+    id:"religion-science", title:"Religion & Science", short:"Religion",
+    subtitle:"Foi, raison et rapport au savoir",
+    reperes:["Croire / Savoir","Démontrer / Révéler","Transcendant / Immanent","Sacré / Profane"],
+    oeuvres:[
+      { title:"Discours Décisif & Réfutation de la réfutation", author:"Ibn Rushd — Averroès (XIIe s.)",
+        these:"La philosophie (science) et la religion (révélation) convergent vers la même vérité. La loi islamique commande aux savants de pratiquer la philosophie.",
+        args:["L'obligation philosophique : philosopher est un devoir religieux pour ceux qui en ont la capacité — la raison est un don divin à exercer.","Triple voie : démonstration apodictique (philosophes), dialectique (théologiens), rhétorique (peuple) — chaque classe accède à la vérité selon ses moyens.","Contre Al-Ghazali : les contradictions apparentes entre philosophie et islam viennent d'une lecture trop littérale. L'interprétation allégorique les résout.","La vérité est une : la philosophie et la révélation y conduisent toutes deux. Philosopher est une prolongation, non une trahison, de la foi."] },
+      { title:"Pensées (Le Pari & les deux infinis)", author:"Blaise Pascal",
+        these:"La science et la raison ont des limites radicales face à l'infini et à Dieu. La foi répond à des questions que la raison ne peut résoudre, et le pari pour Dieu est lui-même une décision rationnelle.",
+        args:["Les deux infinis : l'homme est 'un roseau pensant' écrasé entre l'infiniment grand et l'infiniment petit. Sa raison ne peut embrasser ni l'un ni l'autre.","La raison atteint ses limites propres : elle ne peut ni prouver ni réfuter l'existence de Dieu. Sur cette question, elle doit s'avouer incompétente.","Le pari : si Dieu existe et que je crois — je gagne tout. Si Dieu n'existe pas et que je crois — je perds peu. La raison probabiliste conseille de croire.","La conversion progressive : même si on ne croit pas, agir comme si l'on croyait finit par produire la foi. Le corps et l'habitude précèdent l'âme."] },
+      { title:"Méditations Métaphysiques", author:"René Descartes",
+        these:"La science repose sur des fondements rationnels dont Dieu est le garant ultime. Raison et foi ne s'opposent pas : Dieu est la condition de possibilité de la connaissance scientifique.",
+        args:["La preuve ontologique : l'idée de Dieu (être infiniment parfait) ne peut venir de moi (être fini et imparfait) — elle doit avoir été mise en moi par Dieu lui-même.","Un Dieu parfait ne peut être trompeur : il garantit que les idées claires et distinctes correspondent à la réalité.","Science et foi sont séparées mais non contradictoires : Descartes réserve la physique à la raison et la théologie à la révélation.","La physique mécaniste (extension, mouvement) est compatible avec la création divine : Dieu crée un monde soumis à des lois rationnelles."] }
+    ]
+  },
+  {
+    id:"temps", title:"Temps", short:"Temps",
+    subtitle:"La conscience du temps et son rapport à l'existence",
+    reperes:["Contingent / Nécessaire","Éternel / Temporel","En acte / En puissance","Abstrait / Concret"],
+    oeuvres:[
+      { title:"Confessions (Livre XI)", author:"Saint Augustin",
+        these:"Le temps n'est pas une réalité extérieure et objective mais une distension de l'âme. Il n'y a pas trois temps mais trois présents coexistant dans la conscience.",
+        args:["Le présent du passé est la mémoire (memoria) : le passé n'existe plus comme tel, mais il subsiste dans la conscience sous forme de souvenir.","Le présent du présent est la vision (contuitus) : seul le présent est réel, mais il est fugace, entre un passé révolu et un futur pas encore arrivé.","Le présent du futur est l'attente (expectatio) : le futur n'existe pas encore mais il pré-existe dans l'âme comme anticipation et espérance.","Seul Dieu est dans l'éternité. L'homme est condamné à la temporalité, à la distension de son âme entre ce qui n'est plus et ce qui n'est pas encore."] },
+      { title:"L'Être et le Temps", author:"Martin Heidegger",
+        these:"L'être humain (Dasein) est fondamentalement temporel. Sa temporalité n'est pas une propriété parmi d'autres mais la structure même de son existence, dont la mort est l'horizon.",
+        args:["Le Dasein est 'être-dans-le-monde' : il n'est pas d'abord un sujet enfermé dans la conscience mais un être toujours déjà en relation avec son monde.","La temporalité existentiale : le Dasein est 'jeté' dans un passé qu'il n'a pas choisi, 'projeté' vers un futur (ses possibilités), dans un présent de la préoccupation.","L'être-vers-la-mort : la mort n'est pas un événement futur mais une structure présente de l'existence. L'assumer est la condition de l'authenticité.","L'inauthenticité du 'on' (das Man) : dans la vie quotidienne, on fuit la conscience de la mort en se dissolvant dans l'anonymat du 'on dit', 'on fait'."] },
+      { title:"Méditations Métaphysiques & Principes de la philosophie", author:"René Descartes",
+        these:"Le temps est une succession de moments discontinus et indépendants. La continuité de l'existence n'est pas garantie par la nature des choses mais par Dieu, qui recrée le monde à chaque instant.",
+        args:["La conservation continue : conservation n'est pas un acte une fois pour toutes — Dieu doit recréer le monde continuellement, à chaque instant.","Aucun moment ne découle nécessairement du moment précédent. La continuité du monde est un acte de Dieu, non une propriété de la matière.","Le temps comme ordre de succession : les moments se suivent mais ne se fondent pas. Chaque instant est discret, atomique.","La liberté humaine est possible à chaque instant : aucun déterminisme n'enchaîne de façon absolue le présent au passé."] }
+    ]
+  },
+  {
+    id:"langage", title:"Langage", short:"Langage",
+    subtitle:"Le rapport entre pensée, parole et monde",
+    reperes:["Signifiant / Signifié","Arbitraire / Motivé","Universel / Particulier","Objectif / Subjectif"],
+    oeuvres:[
+      { title:"Phénoménologie de la perception", author:"Maurice Merleau-Ponty",
+        these:"Le langage n'est pas un code transparent servant à transmettre des pensées préformées. Il est une expression corporelle et vivante qui co-constitue le sens en même temps qu'elle le formule.",
+        args:["La parole parlante (créatrice) vs la parole parlée (répétitive) : la parole authentique crée du sens nouveau, elle ne transmet pas un sens déjà là.","Le corps est le premier sujet parlant : le geste expressif précède le mot articulé. Le langage enracine la pensée dans l'expérience corporelle du monde.","Le langage ne traduit pas une pensée préexistante : 'La pensée n'est rien d'intérieur, elle n'existe pas hors du monde et hors des mots.' Penser, c'est déjà parler.","L'intersubjectivité par le langage : nous ne sommes pas des consciences isolées — le langage nous ouvre à un monde partagé où les significations se co-construisent."] },
+      { title:"Cours de linguistique générale", author:"Ferdinand de Saussure",
+        these:"La langue est un système de signes dont le lien au monde est arbitraire (conventionnel) et qui fonctionne par différences internes. Elle précède et conditionne la pensée individuelle.",
+        args:["Le signe linguistique est composé d'un signifiant (image acoustique) et d'un signifié (concept). Le lien entre les deux est arbitraire — purement conventionnel.","La preuve de l'arbitraire : chaque langue découpe la réalité différemment. 'Rivière' et 'fleuve' en français = un seul mot 'river' en anglais.","La langue est un système de différences : un signe vaut non par lui-même mais par opposition aux autres. 'Chat' = tout ce qui n'est pas 'rat', 'mat', 'champ'...","La langue précède la parole individuelle : elle est sociale, collective, inconsciente — chaque locuteur la reçoit toute faite et ne peut la modifier seul."] },
+      { title:"Tractatus Logico-Philosophicus", author:"Ludwig Wittgenstein",
+        these:"Le langage figure le monde : une proposition est une image logique des faits. Mais cette puissance a une limite : ce qui ne peut pas être dit doit être tu.",
+        args:["La théorie picturale : une proposition figure un état de choses possible, comme un tableau figure une scène. Les éléments de la proposition correspondent aux objets du monde.","Les limites du langage = les limites du monde pensable : 'Les limites de mon langage signifient les limites de mon monde.'","Ce qui se montre sans se dire : l'éthique, l'esthétique, le sens de la vie — ces choses se montrent dans la vie mais ne peuvent être dites sans tomber dans le non-sens.","La philosophie traditionnelle génère des pseudo-problèmes : en essayant de dire ce qui ne peut qu'être montré, elle produit des énoncés sans signification vérifiable."] }
+    ]
+  },
+  {
+    id:"definitions-notions", title:"Définitions des notions", short:"Définitions", special:true, type:"notions",
+    subtitle:"Ce qu'est chaque notion au programme",
+    notions:[
+      { name:"Liberté", def:"Pouvoir d'agir selon sa propre volonté, sans contrainte extérieure ou intérieure. La philosophie distingue la liberté naturelle (absence de contrainte), la liberté civile (obéir à la loi qu'on s'est prescrite, Rousseau), le libre arbitre (capacité de choisir indépendamment de toute cause) et la liberté morale (agir selon la raison, Kant).", opp:"≠ Déterminisme, Contrainte, Nécessité" },
+      { name:"Bonheur", def:"État de satisfaction durable et complète de l'existence. Se distingue du plaisir (passager et partiel) et de la joie (émotion intense mais momentanée). Épicure le définit comme ataraxie (absence de trouble de l'âme) ; Aristote comme eudaimonia (accomplissement de la nature humaine par la vertu).", opp:"≠ Plaisir (fugace), Béatitude (réservée à Dieu)" },
+      { name:"Conscience", def:"Présence de l'esprit à lui-même et au monde. On distingue la conscience immédiate ou spontanée (présence directe au monde sans réflexion) et la conscience réflexive (retour de l'esprit sur lui-même : 'je sais que je sais'). La conscience morale est le sentiment intérieur du bien et du mal.", opp:"≠ Inconscient, Automatisme" },
+      { name:"Inconscient", def:"Ensemble des représentations, désirs et souvenirs qui agissent sur le psychisme sans que le sujet en ait conscience. Pour Freud, l'inconscient est une instance psychique réelle, distincte du préconscient et du conscient, régie par le processus primaire (condensation, déplacement).", opp:"≠ Conscience, Cogito cartésien" },
+      { name:"Raison", def:"Faculté humaine de connaître, de juger et d'agir selon des principes universels. On distingue la raison théorique (connaissance de ce qui est) et la raison pratique (détermination de ce qu'il faut faire). La raison s'oppose à la sensibilité, à l'instinct et à la foi.", opp:"≠ Sensibilité, Instinct, Foi" },
+      { name:"Vérité", def:"Conformité d'un jugement à la réalité (vérité-correspondance), ou absence de contradiction dans un système (vérité-cohérence). Se distingue de la certitude (état subjectif d'être convaincu) et de l'évidence (clarté immédiate d'une idée).", opp:"≠ Erreur, Illusion, Opinion" },
+      { name:"Nature", def:"Au sens large, l'ensemble de ce qui existe indépendamment de l'homme. Au sens strict, la nature propre d'un être (son essence ou sa physis). On oppose nature et culture (ce que l'homme ajoute par la technique et le langage), nature et convention.", opp:"≠ Culture, Artifice, Convention" },
+      { name:"Technique", def:"Ensemble de procédés, méthodes et savoir-faire par lesquels l'homme transforme son environnement naturel pour répondre à ses besoins. Se distingue de la science (connaissance théorique) et de l'art (création singulière).", opp:"≠ Nature, Science pure, Hasard" },
+      { name:"Art", def:"Activité humaine qui produit des œuvres visant le beau ou une émotion esthétique, distincte du simple artisanat (qui produit des objets utiles). L'art implique un geste créateur, une intention et un rapport singulier au monde.", opp:"≠ Artisanat, Technique, Nature" },
+      { name:"Travail", def:"Activité par laquelle l'homme transforme la nature pour subvenir à ses besoins et se réaliser. Implique effort, médiation et production. Marx distingue le travail aliéné (sous le capitalisme) et le travail libéré (réappropriation de l'activité productive).", opp:"≠ Loisir, Jeu, Oisiveté" },
+      { name:"Justice", def:"Vertu consistant à rendre à chacun ce qui lui est dû. On distingue la justice commutative (égalité dans les échanges), distributive (selon le mérite ou les besoins) et corrective (réparation des torts). La justice légale est la conformité à la loi.", opp:"≠ Injustice, Inégalité, Arbitraire" },
+      { name:"État", def:"Institution politique souveraine qui détient le monopole de la violence légitime sur un territoire (Weber). Se distingue de la société civile et de la nation. Peut être fondé sur la force (Hobbes) ou le contrat (Rousseau, Locke).", opp:"≠ État de nature, Anarchie, Société civile" },
+      { name:"Religion", def:"Système de croyances, pratiques et représentations qui met l'homme en rapport avec le sacré. Implique une communauté de fidèles, des rites, des textes sacrés et une doctrine. Durkheim : 'système solidaire de croyances et de pratiques relatives à des choses sacrées'.", opp:"≠ Philosophie, Science, Profane" },
+      { name:"Science", def:"Connaissance organisée, méthodique et démonstrative de la réalité. Procède par hypothèses, expériences et réfutations (Popper). Vise l'objectivité, l'universalité et la vérifiabilité. On distingue sciences formelles, sciences de la nature et sciences humaines.", opp:"≠ Opinion, Croyance, Mythe" },
+      { name:"Temps", def:"Succession ordonnée des moments de l'existence. La philosophie distingue le temps physique (objectif, mesurable) et le temps vécu ou phénoménologique (subjectif, durée intérieure — Bergson, Husserl). Implique les trois 'ek-stases' : passé, présent, futur.", opp:"≠ Éternité, Instantané, Atemporalité" },
+      { name:"Langage", def:"Système de signes permettant la communication et l'expression de la pensée. Caractérisé par sa double articulation (phonèmes et monèmes), son arbitraire (Saussure) et sa créativité (Chomsky). À la fois outil de communication et condition de la pensée.", opp:"≠ Bruit, Signal animal, Geste pur" }
+    ]
+  },
+  {
+    id:"reperes-conceptuels", title:"Repères conceptuels", short:"Repères", special:true, type:"reperes",
+    subtitle:"Définitions issues de Dicophilo.fr",
+    reperes:[
+      { a:"Contingent", b:"Nécessaire", vs:true,
+        defA:"Ce dont l'existence n'est pas nécessaire. Quelque chose de contingent peut ne pas avoir lieu. S'il a lieu, il aurait pu ne pas l'être et aurait pu être autrement. Un élément contingent peut disparaître ou être modifié sans toucher à l'essence de la chose. Ex : il est contingent que vous lisiez cette phrase.",
+        defB:"Ce qui est et ne peut être autrement qu'il n'est. Le nécessaire ne peut pas ne pas exister et ne peut pas être autrement. Ex : les vérités analytiques ('un humain est un humain') sont nécessairement vraies en vertu du sens des mots.",
+        note:"Les quatre modalités : contingent, nécessaire, possible, impossible — elles se définissent mutuellement en logique et en métaphysique." },
+      { a:"Possible", b:"Impossible", vs:true,
+        defA:"Ce qui peut devenir réel, ce qui n'est pas en contradiction avec l'ordre des choses. Tout ce qui est réel a forcément été possible. Négativement : le possible ne contredit pas l'ordre du réel.",
+        defB:"Ce qui n'existe pas et n'a aucune chance d'exister. Les choses impossibles ne sont pas réelles et ne peuvent pas le devenir. Ex : un cercle carré est impossible (contradiction logique).",
+        note:"À distinguer du très difficile ou de l'improbable : l'impossible ne peut jamais exister du tout." },
+      { a:"Essentiel", b:"Accidentel", vs:true,
+        defA:"Ce qui relève de l'essence, ce qui constitue ce qu'une chose est nécessairement et immuablement. Une propriété essentielle ne peut être supprimée sans que la chose cesse d'être ce qu'elle est. Ex : 'être rationnel' est essentiel à l'homme selon Aristote.",
+        defB:"Ce qui n'appartient pas à l'essence d'une chose, mais peut l'affecter sans la détruire. L'accident est contingent : il peut être supprimé sans modifier la nature de la substance. Ex : être roux est une propriété accidentelle du chat.",
+        note:"Aristote : l'essence s'exprime dans la définition — genre + différence spécifique. L'accident est hors définition." },
+      { a:"Inné", b:"Acquis", vs:true,
+        defA:"Ce qui est présent à la naissance, inscrit dans la nature de l'être avant toute expérience. Pour Descartes, certaines idées (Dieu, l'infini) sont innées. Pour les rationalistes, la raison elle-même est innée.",
+        defB:"Ce qui est obtenu par l'expérience, l'éducation, l'apprentissage et la culture. Pour les empiristes (Locke), l'esprit est une 'table rase' (tabula rasa) — toute connaissance vient de l'expérience sensible.",
+        note:"Le débat inné/acquis traverse la psychologie, la biologie (nature vs nurture) et la philosophie de la connaissance." },
+      { a:"En fait", b:"En droit", vs:true,
+        defA:"Dans les faits, dans la réalité effective. Exprime ce qui est, ce qui existe réellement, indépendamment de toute norme. Ex : 'En fait, les hommes ne sont pas égaux en force.'",
+        defB:"Ce qui est légitime, légal ou normatif, indépendamment de ce qui existe effectivement. Exprime ce qui devrait être selon une règle ou une norme. Ex : 'En droit, tous les hommes sont égaux.'",
+        note:"Kant : quid facti ? (qu'en est-il du fait ?) vs quid juris ? (qu'en est-il du droit ?). La philosophie morale opère souvent ce passage du fait au droit." },
+      { a:"Sacré", b:"Profane", vs:true,
+        defA:"Catégorie fondamentale de la religion, souvent considérée comme son essence. Ce qui est relatif au divin ou au surnaturel, objet du culte, inspirant une vénération profonde. Pour Durkheim, le sacré est ce que la communauté met à part et entoure d'interdits.",
+        defB:"Ce qui est étranger au sacré. Ce qui appartient au monde ordinaire, à la vie quotidienne non consacrée. L'espace profane est l'espace commun, par opposition à l'espace sacré du temple.",
+        note:"L'opposition sacré/profane (Durkheim, Eliade) est fondatrice de la sociologie et de la phénoménologie de la religion." },
+      { a:"Persuader", b:"Convaincre", vs:true,
+        defA:"Amener quelqu'un à croire ou à faire quelque chose en jouant sur ses émotions, ses sentiments, son imagination — par la rhétorique et la séduction. La persuasion n'exige pas que l'autre comprenne les raisons ; elle vise l'adhésion affective.",
+        defB:"Amener quelqu'un à admettre quelque chose comme vrai en usant de raisons, de preuves et d'arguments logiques. La personne convaincue sait pourquoi elle a accepté la proposition — l'adhésion est rationnelle et fondée.",
+        note:"Platon critique les Sophistes (Gorgias) qui persuadent sans convaincre. La philosophie se veut conviction par la démonstration, non persuasion par la rhétorique." },
+      { a:"Objectif", b:"Subjectif", vs:true,
+        defA:"Ce qui existe indépendamment du sujet pensant et de son point de vue. Est objectif ce qui est valable pour tous, vérifiable et non lié à un vécu particulier. La science vise l'objectivité : décrire la réalité telle qu'elle est en elle-même.",
+        defB:"Ce qui est propre à un sujet déterminé et ne vaut que pour lui. Dépend du point de vue, des émotions, des perceptions d'un individu. Une douleur, un jugement de goût, une émotion sont des vécus subjectifs.",
+        note:"L'intersubjectif est ce qui, sans être purement objectif, fait l'objet d'un accord entre plusieurs sujets — niveau de l'accord partagé, accessible par le dialogue." },
+      { a:"Intersubjectif", b:"(entre objectif et subjectif)", vs:false,
+        defA:"Ce qui est partagé entre plusieurs sujets, construit dans et par la relation. Ni purement objectif (indépendant de tout sujet) ni purement subjectif (propre à un seul individu). Désigne le niveau de l'accord entre consciences : normes sociales, significations linguistiques, valeurs culturelles.",
+        defB:"",
+        note:"Husserl fait de l'intersubjectivité le fondement de l'objectivité scientifique : une vérité est objective quand elle peut être partagée par toute conscience." },
+      { a:"Savoir", b:"Croire", vs:true,
+        defA:"Connaissance fondée sur des preuves, des démonstrations ou une expérience vérifiable. Le savoir est justifié, certain et universel (Platon : epistémè). Il implique que la proposition est vraie ET que le sujet sait pourquoi elle est vraie.",
+        defB:"Adhérer à une proposition sans en avoir la certitude absolue ni la démonstration complète. La croyance peut être vraie ou fausse ; elle est toujours subjective. La foi religieuse est une forme de croyance engagée, fondée sur une relation personnelle au divin.",
+        note:"Kant distingue l'opinion (croyance subjective insuffisante), la croyance (subjective suffisante) et le savoir (objectivement suffisant)." },
+      { a:"Transcendant", b:"Immanent", vs:true,
+        defA:"Ce qui est d'un ordre supérieur et extérieur à un domaine de référence. Dieu est transcendant au monde dans les monothéismes : il existe au-delà de la création, d'une nature radicalement différente. Chez Kant, les idées transcendantes dépassent les limites de l'expérience possible.",
+        defB:"Ce qui est interne à un être et ne nécessite pas l'intervention d'un principe extérieur. Pour Spinoza, Dieu est cause immanente du monde : Dieu s'identifie à la Nature (Deus sive Natura).",
+        note:"Kant distingue transcendant (ce qui dépasse l'expérience possible) et transcendantal (ce qui conditionne a priori l'expérience, comme les catégories de l'entendement)." },
+      { a:"Abstrait", b:"Concret", vs:true,
+        defA:"Ce qui existe dans la pensée, résultat d'une abstraction qui isole et considère séparément une propriété ou un aspect de la réalité. L'abstrait ne peut être saisi directement par les sens. Ex : 'liberté', 'justice', 'humanité' sont des concepts abstraits.",
+        defB:"Ce qui existe réellement et peut être saisi par l'expérience sensible. Du latin concretus (solidifié, matériel). Désigne les êtres tels qu'ils se donnent dans la perception. Ex : cet homme-ci, cet arbre particulier sont des réalités concrètes.",
+        note:"Hegel inverse le mouvement habituel : l'abstrait (l'être pur) est le point de départ, le concret (l'Idée réalisée dans l'histoire) est le point d'arrivée." }
+    ]
+  }
+];
+
+let current = 0;
+
+function buildAll() {
+  // Drawer
+  const drawerNotions = document.getElementById('drawer-notions');
+  const drawerSpecial = document.getElementById('drawer-special');
+  drawerNotions.innerHTML = '';
+  drawerSpecial.innerHTML = '';
+  fiches.forEach((f, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'nav-item' + (f.special ? ' special' : '') + (i === 0 ? ' active' : '');
+    btn.textContent = f.title;
+    btn.onclick = () => { goto(i); closeDrawer(); };
+    if (f.special) drawerSpecial.appendChild(btn);
+    else drawerNotions.appendChild(btn);
+  });
+
+  // Tabs
+  const tabs = document.getElementById('tabs-wrap');
+  tabs.innerHTML = fiches.map((f, i) =>
+    `<button class="tab-btn${f.special ? ' special' : ''}${i === 0 ? ' active' : ''}" onclick="goto(${i})">${f.short || f.title}</button>`
+  ).join('');
+
+  // Content
+  const main = document.getElementById('main-content');
+  main.innerHTML = fiches.map((f, i) =>
+    `<div class="fiche${i === 0 ? ' active' : ''}" id="fiche-${i}">${renderFiche(f, i)}</div>`
+  ).join('');
+
+  document.getElementById('counter').textContent = `1 / ${fiches.length}`;
+}
+
+function renderFiche(f, i) {
+  const isNormal = !f.special;
+  const num = isNormal ? `Notion ${String(i+1).padStart(2,'0')} / 10` : `Page spéciale ${i - 9} / 2`;
+
+  let body = '';
+  if (f.type === 'notions') {
+    body = `<div class="notions-grid">${f.notions.map(n => `
+      <div class="notion-card">
+        <div class="notion-name">${n.name}</div>
+        <div class="notion-def">${n.def}</div>
+        ${n.opp ? `<div class="notion-opp">${n.opp}</div>` : ''}
+      </div>`).join('')}</div>`;
+  } else if (f.type === 'reperes') {
+    body = `<div class="reperes-list">${f.reperes.map(r => `
+      <div class="repere-card">
+        <div class="repere-pair">
+          <span class="repere-term">${r.a}</span>
+          ${r.vs ? `<span class="repere-vs">vs</span><span class="repere-term">${r.b}</span>` : ''}
+        </div>
+        <div class="repere-def-a">${r.defA}</div>
+        ${r.defB ? `<div class="repere-def-b">${r.defB}</div>` : ''}
+        ${r.note ? `<div class="repere-note">${r.note}</div>` : ''}
+      </div>`).join('')}</div>`;
+  } else {
+    body = `
+      <p class="section-label">Repères associés</p>
+      <div class="reperes">${f.reperes.map(r => `<span class="repere-tag">${r}</span>`).join('')}</div>
+      <p class="section-label" style="margin-top:1.5rem">Œuvres & auteurs</p>
+      <div class="oeuvres">${f.oeuvres.map(o => `
+        <div class="oeuvre-card">
+          <div class="oeuvre-meta">
+            <span class="oeuvre-title">${o.title}</span>
+            <span class="oeuvre-author">${o.author}</span>
+          </div>
+          <p class="small-label">Thèse</p>
+          <p class="these">${o.these}</p>
+          <p class="small-label">Arguments</p>
+          <ul class="args">${o.args.map(a => `<li>${a}</li>`).join('')}</ul>
+        </div>`).join('')}
+      </div>`;
+  }
+
+  return `
+    <div class="fiche-head">
+      <p class="fiche-number">${num}</p>
+      <h2 class="fiche-title">${f.title}</h2>
+      <p class="fiche-subtitle">${f.subtitle}</p>
+    </div>
+    ${body}
+    <div class="bottom-nav">
+      <button class="nav-btn" onclick="goto(${i-1})" ${i===0?'disabled':''}>← Préc.</button>
+      <span class="progress-info">${i+1} / ${fiches.length}</span>
+      <button class="nav-btn" onclick="goto(${i+1})" ${i===fiches.length-1?'disabled':''}>Suiv. →</button>
+    </div>`;
+}
+
+function goto(i) {
+  if (i < 0 || i >= fiches.length) return;
+  document.getElementById('fiche-' + current)?.classList.remove('active');
+  document.querySelectorAll('.nav-item')[current]?.classList.remove('active');
+  document.querySelectorAll('.tab-btn')[current]?.classList.remove('active');
+  current = i;
+  document.getElementById('fiche-' + current)?.classList.add('active');
+  document.querySelectorAll('.nav-item')[current]?.classList.add('active');
+  const activeTab = document.querySelectorAll('.tab-btn')[current];
+  activeTab?.classList.add('active');
+  activeTab?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  document.getElementById('counter').textContent = `${current+1} / ${fiches.length}`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Drawer logic
+function openDrawer() {
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('menu-btn').classList.add('active');
+}
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('menu-btn').classList.remove('active');
+}
+document.getElementById('menu-btn').onclick = () => {
+  document.getElementById('drawer').classList.contains('open') ? closeDrawer() : openDrawer();
+};
+document.getElementById('overlay').onclick = closeDrawer;
+document.getElementById('drawer-close').onclick = closeDrawer;
+
+// Swipe support
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 60) dx > 0 ? goto(current - 1) : goto(current + 1);
+}, { passive: true });
+
+buildAll();
+</script>
+</body>
+</html>
